@@ -40,14 +40,14 @@ window.addEventListener('load', () => {
       this.height = 3;
       this.speed = 3;
       this.markedForDeletion = false;
+      this.image = document.querySelector('#projectile');
     }
     update() {
       this.x += this.speed;
       if (this.x > this.game.width * 0.8) this.markedForDeletion = true;
     }
     draw(context) {
-      context.fillStyle = 'yellow';
-      context.fillRect(this.x, this.y, this.width, this.height);
+      context.drawImage(this.image, this.x, this.y);
     }
   }
 
@@ -105,6 +105,7 @@ window.addEventListener('load', () => {
       if (this.game.debug) {
         context.strokeRect(this.x, this.y, this.width, this.height);
       }
+      this.projectiles.forEach((projectile) => projectile.draw(context));
       context.drawImage(
         this.image,
         this.frameX * this.width,
@@ -116,7 +117,6 @@ window.addEventListener('load', () => {
         this.width,
         this.height
       );
-      this.projectiles.forEach((projectile) => projectile.draw(context));
     }
     shootTop() {
       if (this.game.ammo > 0) {
@@ -124,6 +124,14 @@ window.addEventListener('load', () => {
           new Projectile(this.game, this.x + 80, this.y + 30)
         );
         this.game.ammo--;
+      }
+      if (this.powerUp) this.shootBottom();
+    }
+    shootBottom() {
+      if (this.game.ammo > 0) {
+        this.projectiles.push(
+          new Projectile(this.game, this.x + 80, this.y + 175)
+        );
       }
     }
     enterPowerUp() {
@@ -253,7 +261,7 @@ window.addEventListener('load', () => {
     constructor(game) {
       this.game = game;
       this.fontSize = 25;
-      this.fontFamily = 'Helvetica';
+      this.fontFamily = 'Bangers';
       this.color = '#fff';
     }
     draw(context) {
@@ -266,10 +274,7 @@ window.addEventListener('load', () => {
       context.fillStyle = this.color;
       context.font = `${this.fontSize}px ${this.fontFamily}`;
       context.fillText('Score: ' + this.game.score, 20, 40);
-      // ammo
-      for (let i = 0; i < this.game.ammo; i++) {
-        context.fillRect(20 + 5 * i, 50, 3, 20);
-      }
+
       // timer
       const formatTimer = (time) => (time * 0.001).toFixed(1);
       context.fillText('Time: ' + formatTimer(this.game.gameTime), 20, 100);
@@ -280,25 +285,33 @@ window.addEventListener('load', () => {
         let msg1;
         let msg2;
         if (this.game.score > this.game.winningScore) {
-          msg1 = 'You Win!';
+          msg1 = 'You Win';
           msg2 = 'Well done!';
         } else {
           msg1 = 'You lose!';
           msg2 = 'Try again next time';
         }
-        context.font = '50px ' + this.fontFamily;
+        context.font = '100px ' + this.fontFamily;
         context.fillText(
           msg1,
           this.game.width * 0.5,
           this.game.height * 0.5 - 30
         );
-        context.font = '25px ' + this.fontFamily;
+        context.font = '50px ' + this.fontFamily;
         context.fillText(
           msg2,
           this.game.width * 0.5,
           this.game.height * 0.5 + 30
         );
       }
+
+      // ammo
+      if (this.game.player.powerUp) context.fillStyle = '#ffffbd';
+
+      for (let i = 0; i < this.game.ammo; i++) {
+        context.fillRect(20 + 5 * i, 50, 3, 20);
+      }
+
       context.restore();
     }
   }
