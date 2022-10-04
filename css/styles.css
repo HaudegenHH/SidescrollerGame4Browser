@@ -3,6 +3,10 @@
   padding: 0;
   box-sizing: border-box;
 }
+html,
+body {
+  background-color: #222;
+}
 #canvas1 {
   position: absolute;
   top: 50%;

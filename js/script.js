@@ -67,8 +67,11 @@ window.addEventListener('load', () => {
       this.maxSpeed = 5;
       this.projectiles = [];
       this.image = document.querySelector('#player');
+      this.powerUp = false;
+      this.powerUpTimer = 0;
+      this.powerUpLimit = 10000;
     }
-    update() {
+    update(deltaTime) {
       if (this.game.keys.includes('ArrowUp')) this.speedY = -this.maxSpeed;
       else if (this.game.keys.includes('ArrowDown'))
         this.speedY = this.maxSpeed;
@@ -84,6 +87,18 @@ window.addEventListener('load', () => {
         this.frameX++;
       } else {
         this.frameX = 0;
+      }
+      // power up logic
+      if (this.powerUp) {
+        if (this.powerUpTimer > this.powerUpLimit) {
+          this.powerUpTimer = 0;
+          this.powerUp = false;
+          this.frameY = 0;
+        } else {
+          this.powerUpTimer += deltaTime;
+          this.frameY = 1;
+          this.game.ammo += 0.1;
+        }
       }
     }
     draw(context) {
@@ -111,6 +126,11 @@ window.addEventListener('load', () => {
         this.game.ammo--;
       }
     }
+    enterPowerUp() {
+      this.powerUpTimer = 0;
+      this.powerUp = true;
+      this.game.ammo = this.game.maxAmmo;
+    }
   }
 
   class Enemy {
@@ -119,8 +139,6 @@ window.addEventListener('load', () => {
       this.x = this.game.width;
       this.speedX = Math.random() * -1.5 - 0.5;
       this.markedForDeletion = false;
-      this.lives = 5;
-      this.score = this.lives;
       this.frameX = 0;
       this.frameY = 0;
       this.maxFrame = 37;
@@ -155,9 +173,38 @@ window.addEventListener('load', () => {
       super(game);
       this.width = 228;
       this.height = 169;
+      this.lives = 2;
+      this.score = this.lives;
       this.y = Math.random() * (this.game.height * 0.9 - this.height);
       this.image = document.querySelector('#angler1');
       this.frameY = (Math.random() * 3) | 0;
+    }
+  }
+
+  class Angler2 extends Enemy {
+    constructor(game) {
+      super(game);
+      this.width = 213;
+      this.height = 165;
+      this.lives = 4;
+      this.score = this.lives;
+      this.y = Math.random() * (this.game.height * 0.9 - this.height);
+      this.image = document.querySelector('#angler2');
+      this.frameY = (Math.random() * 2) | 0;
+    }
+  }
+
+  class Lucky extends Enemy {
+    constructor(game) {
+      super(game);
+      this.width = 99;
+      this.height = 95;
+      this.lives = 3;
+      this.score = 15;
+      this.y = Math.random() * (this.game.height * 0.9 - this.height);
+      this.image = document.querySelector('#lucky');
+      this.frameY = (Math.random() * 2) | 0;
+      this.type = 'lucky';
     }
   }
 
@@ -276,7 +323,7 @@ window.addEventListener('load', () => {
       this.score = 0;
       this.winningScore = 10;
       this.gameTime = 0;
-      this.timeLimit = 5000;
+      this.timeLimit = 15000;
       this.speed = 1;
       this.debug = true;
     }
@@ -287,7 +334,7 @@ window.addEventListener('load', () => {
       this.background.update();
       this.background.layer4.update();
 
-      this.player.update();
+      this.player.update(deltaTime);
 
       if (this.ammoTimer > this.ammoInterval) {
         if (this.ammo < this.maxAmmo) this.ammo++;
@@ -300,6 +347,8 @@ window.addEventListener('load', () => {
         enemy.update();
         if (this.checkCollision(this.player, enemy)) {
           enemy.markedForDeletion = true;
+          if (enemy.type === 'lucky') this.player.enterPowerUp();
+          else this.score--;
         }
         this.player.projectiles.forEach((projectile) => {
           if (this.checkCollision(projectile, enemy)) {
@@ -331,7 +380,10 @@ window.addEventListener('load', () => {
       this.background.layer4.draw(context);
     }
     addEnemy() {
-      this.enemies.push(new Angler1(this));
+      const rand = Math.random();
+      if (rand < 0.35) this.enemies.push(new Angler1(this));
+      else if (rand > 0.35 && rand < 0.7) this.enemies.push(new Angler2(this));
+      else this.enemies.push(new Lucky(this));
     }
     checkCollision(rect1, rect2) {
       return (
