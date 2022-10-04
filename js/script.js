@@ -11,12 +11,15 @@ window.addEventListener('load', () => {
       this.game = game;
       window.addEventListener('keydown', ({ key }) => {
         if (
-          (key == 'ArrowUp' || key == 'ArrowDown') &&
+          (key === 'ArrowUp' || key === 'ArrowDown') &&
           !this.game.keys.includes(key)
         ) {
           this.game.keys.push(key);
         } else if (key === ' ') {
           this.game.player.shootTop();
+        } else if (key === 'd') {
+          log('switched debug mode');
+          this.game.debug = !this.game.debug;
         }
       });
       window.addEventListener('keyup', ({ key }) => {
@@ -57,9 +60,13 @@ window.addEventListener('load', () => {
       this.height = 190;
       this.x = 20;
       this.y = 100;
+      this.frameX = 0;
+      this.frameY = 0;
+      this.maxFrame = 37;
       this.speedY = 0;
       this.maxSpeed = 5;
       this.projectiles = [];
+      this.image = document.querySelector('#player');
     }
     update() {
       if (this.game.keys.includes('ArrowUp')) this.speedY = -this.maxSpeed;
@@ -72,11 +79,28 @@ window.addEventListener('load', () => {
       this.projectiles = this.projectiles.filter(
         (projectile) => !projectile.markedForDeletion
       );
+      // sprite animation
+      if (this.frameX < this.maxFrame) {
+        this.frameX++;
+      } else {
+        this.frameX = 0;
+      }
     }
     draw(context) {
-      context.fillStyle = 'black';
-      context.fillRect(this.x, this.y, this.width, this.height);
-
+      if (this.game.debug) {
+        context.strokeRect(this.x, this.y, this.width, this.height);
+      }
+      context.drawImage(
+        this.image,
+        this.frameX * this.width,
+        this.frameY * this.height,
+        this.width,
+        this.height,
+        this.x,
+        this.y,
+        this.width,
+        this.height
+      );
       this.projectiles.forEach((projectile) => projectile.draw(context));
     }
     shootTop() {
@@ -237,6 +261,7 @@ window.addEventListener('load', () => {
       this.gameTime = 0;
       this.timeLimit = 5000;
       this.speed = 1;
+      this.debug = true;
     }
     update(deltaTime) {
       if (!this.gameOver) this.gameTime += deltaTime;
