@@ -447,7 +447,7 @@ window.addEventListener('load', () => {
                 enemy.y + enemy.height * 0.5
               )
             );
-            if (enemy.lives <= 0) {
+            if (enemy.lives <= 0 || enemy.x < -enemy.width) {
               // for (let i = 0; i < 10; i++) {
               //   this.particles.push(
               //     new Particle(
